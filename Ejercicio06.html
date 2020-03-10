@@ -99,6 +99,9 @@
                 -0.5, -0.5, 0.5, 0.0, 1.0,
                 0.5, -0.5, 0.5, 1.0, 1.0,
                 0.5, -0.5, -0.5, 1.0, 0.0,
+<body onload="init()">
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+</body>
 
                 -0.5, 0.5, -0.5, 0.0, 1.0,
                 -0.5, 0.5, 0.5, 0.0, 0.0,
@@ -159,7 +162,7 @@
 
         function initTexturesAndDraw(gl) {
             var image = new Image();
-            image.src = 'bricks.jpg';
+            image.src = 'circle.jpg';
             image.onload = function () {
                 loadTexture(gl, "u_Sampler", image, 0, true);
                 drawScene();
