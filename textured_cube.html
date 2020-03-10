@@ -6,6 +6,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 
+    <body onload="init()">
+        <canvas id="myCanvas" width="640" height="480"></canvas>
+      </br>
+        Step: <input type="text" value="0.01" id="step">
+    </body>
+
+
     <script id="shaderVs" type="x-shader/x-vertex">
         attribute vec4 a_Position;
 	    attribute vec2 a_TexCoord;
@@ -38,6 +45,7 @@
     <script>
         var gl;
         var count = 0.0;
+        var rotate = 0;
 
         function init() {
             // Get canvas object from the DOM
@@ -189,6 +197,20 @@
             // Clear
             gl.clear(gl.COLOR_BUFFER_BIT);
 
+            // Rotar izquierda y derecha (sobre eje z)
+            var rotated = mat4.fromRotation(mat4.create(),count,[0.5, 0.5, 0.5]);
+
+            document.onkeydown = function (ev) {
+            var step = new Number(document.getElementById("step").value);
+            switch (ev.keyCode) {
+            case 37: // Left
+            rotate[0] -= step;
+            break;
+            case 39: // Right
+            rotate[1] += step;
+            break;
+          }
+        }
             // Rotate
             var mvMatrix = mat4.fromRotation(mat4.create(), count, [0.5, 0.5, 0.5]);
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
@@ -234,8 +256,6 @@
 
 </head>
 
-<body onload="init()">
-    <canvas id="myCanvas" width="640" height="480"></canvas>
-</body>
+
 
 </html>
