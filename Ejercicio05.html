@@ -16,7 +16,6 @@
       <input type="radio" name="projection" value="orthographic"> Orthographic<br>
     </body>
 
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
 
     <script id="shaderVs" type="x-shader/x-vertex">
@@ -46,7 +45,6 @@
         var canvas;
         var z = -3;
 
-
       function init() {
             // Get canvas object from the DOM
             canvas = document.getElementById("myCanvas");
@@ -63,7 +61,6 @@
             // Init vertex shader
             initVertexShader(gl);
 
-
             // Set clear canvas color
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             // Hidden surface removal
@@ -72,13 +69,9 @@
             document.addEventListener('wheel', function (event) {
               z = event.wheelDelta > 0 ? z + 1 : z - 1;
             });
-
-
-
             // Draw Scene
             drawScene();
         }
-
 
         function drawScene() {
             // Clear
@@ -206,9 +199,5 @@
             return shader;
         }
     </script>
-
-
-</head>
-
 
 </html>
