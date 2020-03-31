@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>WebGL textures: cube</title>
+    <title>Ejercicio 6</title>
   </head>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
@@ -10,13 +10,13 @@
     <body onload="init()">
         <canvas id="myCanvas" width="640" height="480"></canvas>
       </br>
-        Step: <input type="text" value="0.01" id="step">
+        Step: <input type="text" value="0.1" id="step">
     </body>
 
 
     <script id="shaderVs" type="x-shader/x-vertex">
         attribute vec4 a_Position;
-	    attribute vec2 a_TexCoord;
+	      attribute vec2 a_TexCoord;
         varying vec2 v_TexCoord;
 
         uniform mat4 u_pMatrix;
@@ -45,12 +45,21 @@
 
     <script>
         var gl;
+        var canvas;
         var count = 0.0;
-        var rotate = 0;
+        var girarX=0;
+        var girarY=0;
+        var z=-3;
+        var camara=0;
+        var arriba=[0.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0];
+        var abajo=[0.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0];
+        var izquierda=[0.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0];
+        var derecha=[0.0,1.0,0.0,0.0,1.0,0.0,1.0,1.0];
+        var vector_final= izquierda;
 
         function init() {
             // Get canvas object from the DOM
-            var canvas = document.getElementById("myCanvas");
+            canvas = document.getElementById("myCanvas");
 
             // Init WebGL context
             gl = canvas.getContext("webgl");
@@ -66,6 +75,10 @@
 
             // Init vertex shader
             initVertexShader(gl);
+
+            document.addEventListener('wheel',function(event){
+              z=event.wheelDelta > 0? z+1:z-1;
+            });
 
             // Init projection matrix
             initProjection(gl, canvas);
@@ -83,35 +96,37 @@
         function initVertexShader(gl) {
             // Vertexes and texture coordinates
             var vertexesAndTextures = [
-                -0.5, -0.5, -0.5, 0.0, 0.0,
-                0.5, -0.5, -0.5, 1.0, 0.0,
-                0.5, 0.5, -0.5, 1.0, 1.0,
-                -0.5, 0.5, -0.5, 0.0, 1.0,
+              //X   Y   Z
+              //frontal
+                -0.5, -0.5, -0.5, vector_final[0],vector_final[1],
+                0.5, -0.5, -0.5, vector_final[2],vector_final[3],
+                0.5, 0.5, -0.5, vector_final[4],vector_final[5],
+                -0.5, 0.5, -0.5,vector_final[6],vector_final[7],
 
-                -0.5, -0.5, 0.5, 0.0, 1.0,
-                0.5, -0.5, 0.5, 0.0, 0.0,
-                0.5, 0.5, 0.5, 1.0, 0.0,
-                -0.5, 0.5, 0.5, 1.0, 1.0,
+                -0.5, -0.5, 0.5,vector_final[4],vector_final[5],
+                0.5, -0.5, 0.5, vector_final[6],vector_final[7],
+                0.5, 0.5, 0.5, vector_final[0],vector_final[1],
+                -0.5, 0.5, 0.5, vector_final[2],vector_final[3],
 
-                -0.5, -0.5, -0.5, 0.0, 0.0,
-                -0.5, 0.5, -0.5, 0.0, 1.0,
-                -0.5, 0.5, 0.5, 1.0, 1.0,
-                -0.5, -0.5, 0.5, 1.0, 0.0,
+                -0.5, -0.5, -0.5, vector_final[2],vector_final[3],
+                -0.5, 0.5, -0.5,vector_final[4],vector_final[5],
+                -0.5, 0.5, 0.5, vector_final[6],vector_final[7],
+                -0.5, -0.5, 0.5, vector_final[0],vector_final[1],
 
-                0.5, -0.5, -0.5, 0.0, 0.0,
-                0.5, 0.5, -0.5, 0.0, 1.0,
-                0.5, 0.5, 0.5, 1.0, 1.0,
-                0.5, -0.5, 0.5, 1.0, 0.0,
+                0.5, -0.5, -0.5, vector_final[0],vector_final[1],
+                0.5, 0.5, -0.5,vector_final[6],vector_final[7],
+                0.5, 0.5, 0.5, vector_final[4],vector_final[5],
+                0.5, -0.5, 0.5, vector_final[2],vector_final[3],
 
-                -0.5, -0.5, -0.5, 0.0, 0.0,
-                -0.5, -0.5, 0.5, 0.0, 1.0,
-                0.5, -0.5, 0.5, 1.0, 1.0,
-                0.5, -0.5, -0.5, 1.0, 0.0,
+                -0.5, -0.5, -0.5, vector_final[6],vector_final[7],
+                -0.5, -0.5, 0.5,vector_final[0],vector_final[1],
+                0.5, -0.5, 0.5, vector_final[2],vector_final[3],
+                0.5, -0.5, -0.5, vector_final[4],vector_final[5],
 
-                -0.5, 0.5, -0.5, 0.0, 1.0,
-                -0.5, 0.5, 0.5, 0.0, 0.0,
-                0.5, 0.5, 0.5, 1.0, 0.0,
-                0.5, 0.5, -0.5, 1.0, 1.0,
+                -0.5, 0.5, -0.5,vector_final[0],vector_final[1],
+                -0.5, 0.5, 0.5, vector_final[6],vector_final[7],
+                0.5, 0.5, 0.5, vector_final[4],vector_final[5],
+                0.5, 0.5, -0.5, vector_final[2],vector_final[3],
             ];
 
             // Indexes
@@ -161,9 +176,12 @@
 
             // Write u_vMatrix
             var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
-            var vMatrix = mat4.lookAt(mat4.create(), [0, 0, -3], [0, 0, 0], [0, 1, 0]);
+            var vMatrix = mat4.lookAt(mat4.create(), [0, camara, z], [0, 0, 0], [0, 1, 0]);
             gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
+
+
         }
+
 
         function initTexturesAndDraw(gl) {
             var image0 = new Image();
@@ -195,34 +213,68 @@
         }
 
         function drawScene() {
+
+          var rotationChecked = document.querySelector('input[name="rotation"]:checked');
+          if(rotationChecked !=null){
+            count += 0.01;
+          }
             // Clear
             gl.clear(gl.COLOR_BUFFER_BIT);
+            initVertexShader(gl);
+            initProjection(gl, canvas); //si no la camara no funciona
 
-            // Rotar izquierda y derecha (sobre eje z)
-            var rotated = mat4.fromRotation(mat4.create(),count,[0.5, 0.5, 0.5]);
 
-            document.onkeydown = function (ev) {
-            var step = new Number(document.getElementById("step").value);
-            switch (ev.keyCode) {
-            case 37: // Left
-            rotate[0] -= step;
-            break;
-            case 39: // Right
-            rotate[1] += step;
-            break;
-          }
-        }
             // Rotate
-            var mvMatrix = mat4.fromRotation(mat4.create(), count, [0.5, 0.5, 0.5]);
+            var rotateX= mat4.fromXRotation(mat4.create(), girarX);
+            var rotateY=mat4.fromYRotation(mat4.create(), girarY);
+            var matrix= mat4.multiply(mat4.create(),rotateX,rotateY);
+
+
             var uMvMatrix = gl.getUniformLocation(gl.program, "u_mvMatrix");
-            gl.uniformMatrix4fv(uMvMatrix, false, mvMatrix);
+            gl.uniformMatrix4fv(uMvMatrix, false, matrix);
 
             // Draw
             gl.drawElements(gl.TRIANGLES, 6 * 2 * 3, gl.UNSIGNED_SHORT, 0);
 
             // Call drawScene again in the next browser repaint
-            count += 0.01;
+            //count += 0.01;
+
             requestAnimationFrame(drawScene);
+          }
+
+            document.onkeydown = function (ev) {
+            var step = new Number(document.getElementById("step").value);
+            switch (ev.keyCode) {
+            case 37: // Left
+            girarY +=step;
+            girarX = 0.0;
+            vector_final=izquierda;
+            break;
+            case 39: // Right
+            girarY -=step;
+            girarX = 0.0;
+            vector_final=derecha;
+            break;
+            case 38:
+            girarX -=step;
+            girarY = 0.0;
+            vector_final=arriba;
+            break;
+            case 40:
+            girarX +=step;
+            girarY = 0.0;
+            vector_final=abajo;
+            break;
+            case 33: // PageUp (Elevar la cámara)
+
+              camara+= step;
+            break;
+            case 34: // PageDown (Descender la cámara)
+              camara -= step;
+
+            break;
+          }
+          //drawScene();
         }
 
         function initShaders(gl, vs_source, fs_source) {
@@ -253,6 +305,7 @@
             }
             return shader;
         }
+
     </script>
 
 
