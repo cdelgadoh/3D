@@ -1,0 +1,326 @@
+<!--
+Partes implementadas:
+  - Funcionalidad básica.
+  -Funcionalidad avanzada: velocidad desplazamiento vertical y posibilidad de ganar a la cpu.
+  - Mejoras: niveles de dificultad, texturas para la bola y punto de luz en funcion de la pelota.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Practica Final</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/103/three.min.js"></script>
+</head>
+
+<body onload="init()">
+ <center><div id="Marcador">
+  <b id = "name1">USER:</b>
+  <h id = "user_score">0</h>
+  <b id = "name2">CPU: </b>
+  <h id = "cpu_score">0</h>
+ <br><b>Level: </b>
+ <input type="radio" name="level" value="easy" checked> Easy
+ <input type="radio" name="level" value="medium"> Medium
+ <input type="radio" name="level" value="difficult"> Difficult<br>
+ <button id = "skin">Change skin</button>
+<center><button id="start" class="start" type="button" name="button">START</button>
+</div>
+</body>
+
+<script>
+
+   var stepX = 0.0;
+   var stepY = 0.0;
+   var move;
+   var user_score = 0;
+   var cpu_score = 0;
+   var skin = "skin1.png";
+   var position_sphere;
+   var position_user;
+
+   function init() {
+
+      var scene = new THREE.Scene();
+      var sceneWidth = window.innerWidth - 50;
+      var sceneHeight = window.innerHeight - 50;
+
+      var camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.01, 100);
+      camera.position.set(0, -8, 25);
+      camera.lookAt(scene.position);
+
+      var renderer = new THREE.WebGLRenderer({
+         antialias : true
+      });
+      renderer.shadowMap.enabled = true;
+      renderer.setSize(sceneWidth, sceneHeight);
+      document.body.appendChild(renderer.domElement);
+
+      var leftBorder = getBorder("left", 1, 20, 2, -5, 0, 0);
+      var rightBorder = getBorder("right", 1, 20, 2, 5, 0, 0);
+      var cpu = getBorder("top", 3, 1,3, 0, 10, 0);
+      var user = getBorder("down", 3, 1, 3, 0, -10, 0);
+      var sphere = getSphere();
+      var floor = getFloor();
+      var light = getLight(sphere); //Luz puntual
+      var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.5); //Luz ambental
+
+      scene.add(ambientLight);
+      scene.add(light);
+      scene.add(leftBorder);
+      scene.add(rightBorder);
+      scene.add(cpu);
+      scene.add(user);
+      scene.add(sphere);
+      scene.add(floor);
+
+      var borders = [ leftBorder, rightBorder, cpu, user ];
+
+      document.onkeydown = function (ev) {
+      switch (ev.keyCode) {
+          case 37: // Left
+            move = "izquierda";
+            break;
+          case 39: // Right
+            move = "derecha";
+            break;
+      }
+
+      if(user.position.x <= 6 || user.position.x >= -6){
+          if (move == "derecha") {
+            user.position.x++;
+          }else if (move == "izquierda"){
+            user.position.x--;
+          }
+        }
+     }
+      scene.background = new THREE.TextureLoader().load("fondo.jpg");
+
+      animate(sphere, borders, renderer, scene, camera);
+
+ //Cambio textura sphere.
+      var button_skin = document.getElementById("skin");
+      button_skin.onclick = () => {
+        if (skin == ("skin1.png")){
+          skin = "skin2.jpg";
+          scene.getObjectByName("sphere").material = getOtherMaterial();
+        }else if(skin==("skin2.jpg")){
+          skin="skin3.jpg";
+          scene.getObjectByName("sphere").material = getOtherMaterial();
+        }else if(skin==("skin3.jpg")){
+          skin="skin4.png";
+          scene.getObjectByName("sphere").material = getOtherMaterial();
+        }else{
+          skin ="skin1.png";
+          scene.getObjectByName("sphere").material = getOtherMaterial();
+
+        }
+      }
+
+      var Start = document.getElementById('start');
+
+      Start.onclick = () => {
+      var Level = document.querySelector('input[name="level"]:checked').value;
+        console.log("start");
+        if (Level == 'easy') {
+          stepX = 0.2;
+          stepY = 0.4;
+        }else if (Level == 'medium') {
+          stepX = 0.3;
+          stepY = 0.6;
+        }else if (Level == 'difficult') {
+          stepX = 0.4;
+          stepY = 0.6;
+        }
+      }
+  }
+
+   function move_cpu(cpu, sphere){
+    if(cpu.position.x <= 6 && cpu.position.x >= -6){
+      cpu.position.x = sphere.position.x*0.25;
+    }
+   }
+   function start(sphere){
+     sphere.position.x += stepX;
+     sphere.position.y += stepY;
+   }
+   function restart(sphere){
+     sphere.position.x = 0;
+     sphere.position.y = 0;
+     stepX = 0;
+     stepY = 0;
+
+   }
+
+   function velocidadY(positionX){
+     var speed;
+       if (position_user == null){
+         position_user = 0;
+       }
+       if (position_user < 0 && positionX<0){
+         moveY = Math.abs(Math.abs(position_user)-Math.abs(positionX))
+       }else if (position_user > 0 && positionX>0) {
+         moveY = Math.abs(position_user-positionX_down)
+       }else{
+         moveY = Math.abs(position_user)+Math.abs(positionX)
+       }
+       if (moveY > 5){
+         speed = 1.5;
+       }else{
+         speed = (movetY*0.1)+0.7;
+       }
+       return speed;
+     }
+
+   function animate(sphere, borders, renderer, scene, camera) {
+//Movimiento esfera sobre su eje.
+     sphere.rotation.y += 0.05;
+      checkCollision(sphere, borders);
+
+      cpu = borders[2];
+      move_cpu(cpu, sphere);
+
+      start(sphere);
+
+      document.getElementById("user_score").innerText = user_score;
+      document.getElementById("cpu_score").innerText = cpu_score;
+
+      if(sphere.position.y <= -10){
+        cpu_score += 1;
+        restart(sphere);
+      }else if(sphere.position.y >= 10){
+        user_score += 1;
+        restart(sphere);
+      }
+
+      if(user_score == 5){
+        restart(sphere);
+        user_score = 0;
+        cpu_score = 0;
+        alert("YOU WIN!!");
+      }else if(cpu_score == 5){
+        restart(sphere);
+        user_score = 0;
+        cpu_score = 0;
+        alert("YOU LOSE!");
+      }else if(user_score == 5 || cpu_score == 5){
+        restart(sphere);
+        user_score = 0;
+        cpu_score = 0;
+        alert("EMPATE!");
+      }
+
+      renderer.render(scene, camera);
+
+      requestAnimationFrame(function() {
+         animate(sphere, borders, renderer, scene, camera);
+      });
+   }
+
+   function getLight(sphere) {
+     var spotLight = new THREE.SpotLight();
+   //La luz sigue a la bola
+   spotLight.target = sphere;
+   spotLight.position.set(-10, 5, 7);
+   spotLight.angle = Math.PI / 20;
+   spotLight.penumbra = 0.6;
+   spotLight.castShadow = true;
+   spotLight.shadow.mapSize.width = 4096;
+   spotLight.shadow.mapSize.height = 4096;
+   return spotLight;
+   }
+
+   function getSphere() {
+      var geometry = new THREE.SphereGeometry(0.8, 10, 10);
+      var mesh = new THREE.Mesh(geometry, getSphereMaterial());
+      mesh.position.z = 1;
+      mesh.castShadow = true;
+      mesh.name = "sphere";
+      return mesh;
+   }
+
+   function getFloor() {
+      var geometry = new THREE.PlaneGeometry(10, 20);
+      var mesh = new THREE.Mesh(geometry, getWoodMaterial_floor());
+      mesh.receiveShadow = true;
+
+      return mesh;
+   }
+
+
+   function getBorder(name, x, y, z, posX, posY, posZ) {
+      var geometry = new THREE.BoxGeometry(x, y, z);
+      var mesh = new THREE.Mesh(geometry, getWoodMaterial_borders());
+      mesh.receiveShadow = true;
+      mesh.position.set(posX, posY, posZ);
+      mesh.name = name;
+
+      return mesh;
+   }
+
+
+   function getWoodMaterial_borders() {
+      var texture = new THREE.TextureLoader().load("borders.jpg");
+      var material = new THREE.MeshPhysicalMaterial({
+         map : texture
+      });
+      material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
+      material.map.repeat.set(4, 4);
+      material.side = THREE.DoubleSide;
+
+      return material;
+   }
+
+   function getWoodMaterial_floor() {
+      var texture = new THREE.TextureLoader().load("floor.jpg");
+      var material = new THREE.MeshPhysicalMaterial({
+         map : texture
+      });
+      material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
+      material.map.repeat.set(4, 4);
+      material.side = THREE.DoubleSide;
+
+      return material;
+   }
+
+   function getOtherMaterial(){
+     var texture = new THREE.TextureLoader().load(skin);
+     var material = new THREE.MeshPhysicalMaterial({
+       map : texture
+     });
+     material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
+     material.side = THREE.DoubleSide;
+     return material;
+   }
+   function getSphereMaterial(){
+     var texture = new THREE.TextureLoader().load("skin1.png");
+     var material = new THREE.MeshPhysicalMaterial({
+       map : texture
+     });
+     return material;
+    }
+
+
+   function checkCollision(sphere, borders) {
+      var originPosition = sphere.position.clone();
+
+      for (var i = 0; i < sphere.geometry.vertices.length; i++) {
+         var localVertex = sphere.geometry.vertices[i].clone();
+         var globalVertex = localVertex.applyMatrix4(sphere.matrix);
+         var directionVector = globalVertex.sub(sphere.position);
+         var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
+         var collisionResults = ray.intersectObjects(borders);
+         if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+            // Collision detected
+            if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right") {
+               stepX *= -1;
+            }
+            if (collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
+               stepY *= -1;
+            }
+            break;
+         }
+      }
+   }
+</script>
+</html>

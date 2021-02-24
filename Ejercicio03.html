@@ -27,6 +27,7 @@
 </script>
 
 <script>
+var porition=0;
     function init() {
         // Get canvas object from the DOM
         var canvas = document.getElementById("myCanvas");
@@ -86,9 +87,7 @@ for (var i = 0; i < array.length; i++) {
 
     size = 20.0;
     color=[1,1,1,1];
-  } else {
-    size = 10.0;
-    if (tam[0]> 0 && tam[1]>0){
+  } else if (tam[0]> 0 && tam[1]>0){
       color=[1,0,0,1];
     }else if (tam[0]>0 && tam[1]<0) {
       color=[0,1,0,1];
@@ -101,9 +100,38 @@ for (var i = 0; i < array.length; i++) {
   gl.vertexAttrib3fv(a_Position,tam);
   gl.vertexAttrib1f(a_Size,size);
   gl.uniform4f(u_FragColor,color[0],color[1],color[2],color[3]);
-  gl.drawArrays(gl.POINTS, 0, 1);
+  if (n<0) {
+    console.log("Failed to set the position of the vertices");
+    return;
+  }
+  gl.drawArrays(gl.Triangle, 0, n);
 
 }}
+
+function initVertexBuffers(gl,position){
+  var dim =2;
+  var vertices = new Float32Array([
+    position[0],position[1]+0.5,
+    position[0]+0.05,position[1]-0.5,
+    position[0]-0.05,position[1]-0.5,
+
+  ]);
+  var vertexBuffer= gl.createBuffer();
+  if (!vertexBuffer){
+    console.log('Failed to create the buffer object');
+    return -1;
+  }
+  gl.blindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+  var a_Position = gl.getAttribLocation(gl.program,'a_Position');
+  if (a_Position<0){
+    return-1;
+  }
+gl.vertexAttribPointer(a_Position,dim,gl.Float,false,0,0);
+gl.enableVertexAttribArray(a_Position);
+return vertices.length/dim;
+
+}
 
 
 function initShaders(gl, vs_source, fs_source) {
